@@ -11,28 +11,24 @@
         value: { label: 'Verbrauch', color: 'var(--chart-1)' }
     } satisfies Chart.ChartConfig;
 
-    // Nutzen direkt den Index (0–23) als Achsen-Schlüssel
+    // Index (0–23) als Achsenschlüssel nutzen & Null-Werte abfangen
     const verbrauchData = $derived(
         (data.verbrauch ?? []).map((d, index) => ({
             time: index.toString(),
-            value: typeof d.value === 'number' ? d.value : 0
+            value: d.value ?? 0
         }))
     );
 
+    // Erstes Datum der Daten nutzen oder als Fallback HEUTE
+    const firstTimestamp = data.verbrauch?.[0]?.time ? new Date(data.verbrauch[0].time) : new Date();
+
     const datumLabel = $derived(
-        data.verbrauch && data.verbrauch.length > 0
-            ? new Date(data.verbrauch[0].time).toLocaleDateString('de-DE', {
-                    weekday: 'long',
-                    day: '2-digit',
-                    month: 'long',
-                    year: 'numeric'
-                })
-            : new Date().toLocaleDateString('de-DE', {
-                    weekday: 'long',
-                    day: '2-digit',
-                    month: 'long',
-                    year: 'numeric'
-                })
+        firstTimestamp.toLocaleDateString('de-DE', {
+            weekday: 'long',
+            day: '2-digit',
+            month: 'long',
+            year: 'numeric'
+        })
     );
 </script>
 
@@ -60,11 +56,8 @@
                             padding={{ left: 55, bottom: 30, right: 10, top: 10 }}
                             series={[{ key: 'value', label: chartConfig.value.label, color: 'var(--chart-1)' }]}
                             props={{
-                                xAxis: { 
-                                    format: (v: string) => v // Zeigt strikt 0, 1, 2 ... 23 an
-                                },
                                 yAxis: { 
-                                    format: (v: number) => `${(v ?? 0).toFixed(1)} kWh`
+                                    format: (v: number) => `${v.toFixed(1)} kWh`
                                 }
                             }}
                         >
